@@ -20,7 +20,7 @@ with open('data.csv', 'a') as csvfile:
     rightWall = input('How many inches away is NAO from the right wall?')
     leftWall = input('How many inches away is NAO from the left wall?')
     orientation = input('what is the orientation of the body?')
-    
+
 
     # Get sonar left first echo (distance in meters to the first obstacle).
     leftSonar = memoryProxy.getData("Device/SubDeviceList/US/Left/Sensor/Value")
@@ -28,6 +28,5 @@ with open('data.csv', 'a') as csvfile:
     # Same thing for right.
     rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
 
-    writer.writerow({'centerWall': number1, 'number2': number2})
+    writer.writerow({'centerWall': centerWall, 'rightWall': rightWall, 'leftWall': leftWall, 'orientation':orientation, 'headOrientation':headOrientation, 'leftSonar':leftSonar,'rightSonar':rightSonar})
 
-sonarProxy.unsubscribe("myApplication")

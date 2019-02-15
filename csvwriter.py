@@ -153,16 +153,16 @@ with open('data.csv', 'a') as csvfile:
     headOrientation = "Init"
 
     # TODO MODIFY THIS TO ROTATE AND DO NECESSARY ANGLES FOR EACH SQUARE/POSITION    
-    for loopCount in range(1,2):
+    for loopCount in range(-4,4):
         postureProxy.goToPosture("StandInit",0.5)
         motionProxy.moveInit()
         motionProxy.setStiffnesses("Head", 1.0)
         if (motionProxy.moveIsActive()):
             print("active move")
             motionProxy.killMove()
-        yaw = 0.0  # yaw desired for head (when body turning not desired)
+        yaw = math.radians(loopCount * 10)  # yaw desired for head (when body turning not desired)
         headOrientation = str(yaw)
-        print("init head yaw")
+        print("init head yaw: " + str(yaw))
         motionProxy.angleInterpolationWithSpeed("Head", [yaw, 0.0], 1.0)
         print("subscribe landmarks")
         subscribeToLandmarks();
@@ -187,7 +187,7 @@ with open('data.csv', 'a') as csvfile:
         (alpha1, beta1, da1, db1, nb1, alpha2, beta2, da2, db2, nb2, t, N) = getLandmarkAngles(2);
         print("acceptable head yaw/pitch:",math.degrees(headYaw[0]),math.degrees(hps[0]))
         print("status, N="+str(N),"alpha="+str(math.degrees(alpha1))+"/"+str(math.degrees(alpha2)),"db="+str(math.degrees(db1))+"/"+str(math.degrees(db2)))
-
+    
         # Get sonar left first echo (distance in meters to the first obstacle).
         leftSonar = memoryProxy.getData("Device/SubDeviceList/US/Left/Sensor/Value")
         print("left sonar: " + str(leftSonar))

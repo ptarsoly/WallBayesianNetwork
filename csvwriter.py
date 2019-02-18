@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import math
+import operator
 # Python Image Library
 import Image
 
@@ -100,7 +101,7 @@ def getLandmarkPosition():
     ###
     return memoryProxy.getData("LandmarkDetected")
 
-def saveNaoImage(camProxy, centerWall, rightWall, leftWall, orientation, headOrientationYaw, cameraNameUsed):
+def saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed):
     """
     First get an image from Nao, then save it to the images folder. The name is based on the passed in orientation data
     """
@@ -129,7 +130,7 @@ def saveNaoImage(camProxy, centerWall, rightWall, leftWall, orientation, headOri
     im = Image.fromstring("RGB", (imageWidth, imageHeight), array)
 
     # Save the image.
-    imageName = str(centerWall) + "_" + str(rightWall) + "_" + str(leftWall) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
+    imageName = str(row) + "_" + str(column) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
     imageRelativePath = os.path.join("images", imageName)
     im.save(imageRelativePath, "PNG")
 
@@ -165,13 +166,10 @@ resolution = 2    # VGA
 colorSpace = 11   # RGB
 
 with open('data.csv', 'a') as csvfile:
-    fieldnames = ['centerWall','rightWall','leftWall','orientation','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
+    fieldnames = ['row','column','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    centerWall = input('How many inches away is NAO from the center wall?')
-    rightWall = input('How many inches away is NAO from the right wall?')
-    leftWall = input('How many inches away is NAO from the left wall?')
-    orientation = input('what is the orientation of the body?')
+    orientation = input('what is the orientation of the body? (L, S, R)')
     headOrientationYaw = "Init"
     
     postureProxy.goToPosture("StandInit",0.5)
@@ -183,50 +181,78 @@ with open('data.csv', 'a') as csvfile:
         
     print("subscribe landmarks")
     subscribeToLandmarks();
-
-    # Loops over and gathers data at different head angles
-    #for loopCount in range(-4,4):
-    for loopCount in range(0,1):
-        yaw = math.radians(loopCount * 10)  # yaw desired for head (when body turning not desired)
-        headOrientationYaw = str(yaw)
-        print("init head yaw: " + headOrientationYaw)
-        motionProxy.angleInterpolationWithSpeed("Head", [yaw, 0.0], 1.0)
-        landmarkProxy.pause(True) # not tested
-        
-        videoClient = camProxy.subscribe("python_client", resolution, colorSpace, 5)
-
-        # Capture landmark data and image using upper camera
-        camProxy.setActiveCamera(0)
-        activeCameraIndex = camProxy.getActiveCamera()
-        cameraNameUsed = camProxy.getCameraName(activeCameraIndex)
-        
-        print("Looking using camera: " + cameraNameUsed)
-        (actualYawU, actualPitchU, alpha1U, beta1U, da1U, db1U, nb1U, alpha2U, beta2U, da2U, db2U, nb2U, tU, NU) = captureLandmarkData(yaw)
     
-        # Save imagine from video output
-        saveNaoImage(camProxy, centerWall, rightWall, leftWall, orientation, headOrientationYaw, cameraNameUsed)
-        
-        # Do a second round using the lower camera
-        camProxy.setActiveCamera(1)
-        activeCameraIndex = camProxy.getActiveCamera()
-        cameraNameUsed = camProxy.getCameraName(activeCameraIndex)
-        
-        print("Looking using camera: " + cameraNameUsed)
-        (actualYawL, actualPitchL, alpha1L, beta1L, da1L, db1L, nb1L, alpha2L, beta2L, da2L, db2L, nb2L, tL, NL) = captureLandmarkData(yaw)
-        
-        # Save imagine from video output
-        saveNaoImage(camProxy, centerWall, rightWall, leftWall, orientation, headOrientationYaw, cameraNameUsed)
-        
-        camProxy.setActiveCamera(0) # Set back to the first one which is default
-        
-        camProxy.unsubscribe(videoClient)
-        
-        # Get sonar left first echo (distance in meters to the first obstacle).
-        leftSonar = memoryProxy.getData("Device/SubDeviceList/US/Left/Sensor/Value")
-        print("left sonar: " + str(leftSonar))
+    squareSizeInches = 0.0508
+    numSquares = 24
+    squaresInColumn = 6
+    moveUp = True
 
-        # Same thing for right.
-        rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
-        print("right sonar: " + str(rightSonar))
+    # Loop for the robot to move square positions automatically
+    for squareNumber in range (0, numSquares):
+        # Every 6 columns we need to move right (take squareNumber plus 1 since count starts at 0)
+        if ((squareNumber + 1) % squaresInColumn) == 0 and squareNumber != 0:
+            # Move right
+            moveUp = operator.not_(moveUp) # Change to move opposite direction up/down now
+            motionProxy.moveTo(squareSizeInches, 0.0, 0.0)
+            row = row + 1
+        else:
+            # move up/down
+            yDistance = squareSizeInches
+            if moveDown:
+                yDistance = yDistance * -1.0
+                column = column - 1
+            else:
+                column = column + 1
+            motionProxy.moveTo(0.0, yDistance, 0.0)
+            
+        # Wait for movement
+        time.sleep(1)
+        
+        print("Nao should be at row, column: (" + row + "," + column + ")")
+        
+        # Loops and gathers data at different head angles
+        for loopCount in range(-4,4):
+        #for loopCount in range(0,1):
+            yaw = math.radians(loopCount * 10)  # yaw desired for head (when body turning not desired)
+            headOrientationYaw = str(yaw)
+            print("init head yaw: " + headOrientationYaw)
+            motionProxy.angleInterpolationWithSpeed("Head", [yaw, 0.0], 1.0)
+            landmarkProxy.pause(True) # not tested
+            
+            videoClient = camProxy.subscribe("python_client", resolution, colorSpace, 5)
 
-        writer.writerow({'centerWall': centerWall, 'rightWall': rightWall, 'leftWall': leftWall, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})
+            # Capture landmark data and image using upper camera
+            camProxy.setActiveCamera(0)
+            activeCameraIndex = camProxy.getActiveCamera()
+            cameraNameUsed = camProxy.getCameraName(activeCameraIndex)
+            
+            print("Looking using camera: " + cameraNameUsed)
+            (actualYawU, actualPitchU, alpha1U, beta1U, da1U, db1U, nb1U, alpha2U, beta2U, da2U, db2U, nb2U, tU, NU) = captureLandmarkData(yaw)
+        
+            # Save imagine from video output
+            saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+            
+            # Do a second round using the lower camera
+            camProxy.setActiveCamera(1)
+            activeCameraIndex = camProxy.getActiveCamera()
+            cameraNameUsed = camProxy.getCameraName(activeCameraIndex)
+            
+            print("Looking using camera: " + cameraNameUsed)
+            (actualYawL, actualPitchL, alpha1L, beta1L, da1L, db1L, nb1L, alpha2L, beta2L, da2L, db2L, nb2L, tL, NL) = captureLandmarkData(yaw)
+            
+            # Save image from video output
+            saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+            
+            camProxy.setActiveCamera(0) # Set back to the first one which is default
+            
+            camProxy.unsubscribe(videoClient)
+            
+            # Get sonar left first echo (distance in meters to the first obstacle).
+            leftSonar = memoryProxy.getData("Device/SubDeviceList/US/Left/Sensor/Value")
+            print("left sonar: " + str(leftSonar))
+
+            # Same thing for right.
+            rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
+            print("right sonar: " + str(rightSonar))
+
+        writer.writerow({'row': row, 'column': column, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})

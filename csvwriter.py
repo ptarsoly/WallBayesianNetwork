@@ -169,7 +169,7 @@ with open('data.csv', 'a') as csvfile:
     fieldnames = ['row','column','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    orientation = input('what is the orientation of the body? (L, S, R)')
+    orientation = raw_input('what is the orientation of the body? (L, S, R)')
     headOrientationYaw = "Init"
     
     postureProxy.goToPosture("StandInit",0.5)

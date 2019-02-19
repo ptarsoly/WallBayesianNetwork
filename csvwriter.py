@@ -22,7 +22,7 @@ def captureLandmarkData(yaw):
     time.sleep(0.5)
     landmarkProxy.pause(True) # not tested
     hps = getHeadPitch()
-    if (abs(math.degrees(hps[0]) > 10.0)):
+    if (abs(math.degrees(hps[0]) > 15.0)):
         print("unacceptable pitch:",math.degrees(hps[0]))
         print("PROGRAM NOW EXITING, DATA FOR THIS ROW WILL BE BAD AND SHOULD BE DELETED")
         sys.exit(-1)
@@ -74,6 +74,11 @@ def getLandmarkAngles(i):
         da1 = markShapeInfo[3]
         db1 = markShapeInfo[4]
         mid = markExtraInfo[0]
+        alpha2 = None
+        beta2 = None
+        da2 = None
+        db2 = None
+        mid2 = None
         if (N == 1):
             print("N="+str(N) + " id="+str(mid))
             return (alpha1, beta1, da1, db1, mid, 0, 0, 0, 0, 0, time, N)
@@ -183,39 +188,42 @@ with open('data.csv', 'a') as csvfile:
     subscribeToLandmarks();
     
     squareSizeInches = 0.0508
-    numSquares = 24
-    squaresInColumn = 6
+    numSquares = 32
+    squaresInColumn = (8 if (orientation.upper() == 'S') else 4)
     moveUp = True
     row = 0
     column = 0
 
     # Loop for the robot to move square positions automatically
     for squareNumber in range (0, numSquares):
-        # Every 6 columns we need to move right (take squareNumber plus 1 since count starts at 0)
-        if ((squareNumber + 1) % squaresInColumn) == 0 and squareNumber != 0:
+        print("squareNumber: " + str(squareNumber))
+        # Every 8 or 4 columns we need to move right
+        if (squareNumber % squaresInColumn) == 0 and squareNumber != 0:
+            print("MOVING RIGHT")
             # Move right
             moveUp = operator.not_(moveUp) # Change to move opposite direction up/down now
-            motionProxy.moveTo(squareSizeInches, 0.0, 0.0)
-            row = row + 1
-        else:
+            motionProxy.moveTo(0.0, (squareSizeInches * -1.0), 0.0)
+            column = column + 1
+        elif squareNumber != 0:
+            print("MOVING UP OR DOWN")
             # move up/down
             yDistance = squareSizeInches
             if not moveUp:
                 yDistance = yDistance * -1.0
-                column = column - 1
+                row = row - 1
             else:
-                column = column + 1
-            motionProxy.moveTo(0.0, yDistance, 0.0)
+                row = row + 1
+            motionProxy.moveTo(yDistance, 0.0, 0.0)
             
         # Wait for movement
         time.sleep(1)
         
-        print("Nao should be at row, column: (" + str(row) + "," + str(column) + ")")
+        print("Nao should be at column, row: (" + str(column) + "," + str(row) + ")")
         
         # Loops and gathers data at different head angles
-        for loopCount in range(-4,4):
+        for loopCount in range(-9,10):
         #for loopCount in range(0,1):
-            yaw = math.radians(loopCount * 10)  # yaw desired for head (when body turning not desired)
+            yaw = math.radians(loopCount * 5)  # yaw desired for head (when body turning not desired)
             headOrientationYaw = str(yaw)
             print("init head yaw: " + headOrientationYaw)
             motionProxy.angleInterpolationWithSpeed("Head", [yaw, 0.0], 1.0)
@@ -231,8 +239,9 @@ with open('data.csv', 'a') as csvfile:
             print("Looking using camera: " + cameraNameUsed)
             (actualYawU, actualPitchU, alpha1U, beta1U, da1U, db1U, nb1U, alpha2U, beta2U, da2U, db2U, nb2U, tU, NU) = captureLandmarkData(yaw)
         
-            # Save imagine from video output
-            saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+            # Save image from video output every third time the Nao rotates his head
+            if loopCount % 3 == 0:
+                saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
             
             # Do a second round using the lower camera
             camProxy.setActiveCamera(1)
@@ -242,8 +251,9 @@ with open('data.csv', 'a') as csvfile:
             print("Looking using camera: " + cameraNameUsed)
             (actualYawL, actualPitchL, alpha1L, beta1L, da1L, db1L, nb1L, alpha2L, beta2L, da2L, db2L, nb2L, tL, NL) = captureLandmarkData(yaw)
             
-            # Save image from video output
-            saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+            # Save image from video output every third time the Nao rotates his head
+            if loopCount % 3 == 0:
+                saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
             
             camProxy.setActiveCamera(0) # Set back to the first one which is default
             
@@ -257,4 +267,4 @@ with open('data.csv', 'a') as csvfile:
             rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
             print("right sonar: " + str(rightSonar))
 
-        writer.writerow({'row': row, 'column': column, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})
+        writer.writerow({'column': column, 'row': row, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})

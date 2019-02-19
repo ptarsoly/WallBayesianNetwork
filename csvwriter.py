@@ -169,7 +169,7 @@ with open('data.csv', 'a') as csvfile:
     fieldnames = ['row','column','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    orientation = raw_input('what is the orientation of the body? (L, S, R)')
+    orientation = raw_input('what is the orientation of the body? (L, S, R): ')
     headOrientationYaw = "Init"
     
     postureProxy.goToPosture("StandInit",0.5)
@@ -186,6 +186,8 @@ with open('data.csv', 'a') as csvfile:
     numSquares = 24
     squaresInColumn = 6
     moveUp = True
+    row = 0
+    column = 0
 
     # Loop for the robot to move square positions automatically
     for squareNumber in range (0, numSquares):
@@ -198,7 +200,7 @@ with open('data.csv', 'a') as csvfile:
         else:
             # move up/down
             yDistance = squareSizeInches
-            if moveDown:
+            if not moveUp:
                 yDistance = yDistance * -1.0
                 column = column - 1
             else:
@@ -208,7 +210,7 @@ with open('data.csv', 'a') as csvfile:
         # Wait for movement
         time.sleep(1)
         
-        print("Nao should be at row, column: (" + row + "," + column + ")")
+        print("Nao should be at row, column: (" + str(row) + "," + str(column) + ")")
         
         # Loops and gathers data at different head angles
         for loopCount in range(-4,4):

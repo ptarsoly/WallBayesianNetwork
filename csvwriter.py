@@ -106,7 +106,7 @@ def getLandmarkPosition():
     ###
     return memoryProxy.getData("LandmarkDetected")
 
-def saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed):
+def saveNaoImage(camProxy, runid, row, column, orientation, headOrientationYaw, cameraNameUsed):
     """
     First get an image from Nao, then save it to the images folder. The name is based on the passed in orientation data
     """
@@ -135,7 +135,7 @@ def saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraN
     im = Image.fromstring("RGB", (imageWidth, imageHeight), array)
 
     # Save the image.
-    imageName = str(column) + "_" + str(row) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
+    imageName = str(runid) + "_" + str(column) + "_" + str(row) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
     imageRelativePath = os.path.join("images", imageName)
     im.save(imageRelativePath, "PNG")
 
@@ -171,9 +171,10 @@ resolution = 2    # VGA
 colorSpace = 11   # RGB
 
 with open('data.csv', 'a') as csvfile:
-    fieldnames = ['column','row', 'orientation','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
+    fieldnames = ['runid', 'column','row', 'orientation','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
+    runid = raw_input('What is the unique run ID?: ')
     orientation = raw_input('what is the orientation of the body? (L, S, R): ')
     headOrientationYaw = "Init"
     
@@ -241,7 +242,7 @@ with open('data.csv', 'a') as csvfile:
         
             # Save image from video output every third time the Nao rotates his head
             if loopCount % 3 == 0:
-                saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+                saveNaoImage(camProxy, runid, row, column, orientation, headOrientationYaw, cameraNameUsed)
             
             # Do a second round using the lower camera
             camProxy.setActiveCamera(1)
@@ -253,7 +254,7 @@ with open('data.csv', 'a') as csvfile:
             
             # Save image from video output every third time the Nao rotates his head
             if loopCount % 3 == 0:
-                saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraNameUsed)
+                saveNaoImage(camProxy, runid, row, column, orientation, headOrientationYaw, cameraNameUsed)
             
             camProxy.setActiveCamera(0) # Set back to the first one which is default
             
@@ -267,4 +268,4 @@ with open('data.csv', 'a') as csvfile:
             rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
             print("right sonar: " + str(rightSonar))
 
-            writer.writerow({'column': column, 'row': row, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})
+            writer.writerow({'runid': runid, 'column': column, 'row': row, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})

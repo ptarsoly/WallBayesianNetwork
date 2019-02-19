@@ -17,9 +17,9 @@ def captureLandmarkData(yaw):
         [[0.00001+yaw, 0.0+yaw, 0.000001+yaw],[0.0, 0.000001]], [[1.0, 1.5, 2.0],[1.0, 3.0]],
         True  # angle, time, absolute (vs relative to current)
         )
-    time.sleep(1.0)
-    landmarkProxy.pause(False) # not tested
     time.sleep(0.5)
+    landmarkProxy.pause(False) # not tested
+    time.sleep(0.250)
     landmarkProxy.pause(True) # not tested
     hps = getHeadPitch()
     if (abs(math.degrees(hps[0]) > 15.0)):
@@ -135,7 +135,7 @@ def saveNaoImage(camProxy, row, column, orientation, headOrientationYaw, cameraN
     im = Image.fromstring("RGB", (imageWidth, imageHeight), array)
 
     # Save the image.
-    imageName = str(row) + "_" + str(column) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
+    imageName = str(column) + "_" + str(row) + "_" + str(orientation) + "_" + str(headOrientationYaw) + "_" + cameraNameUsed + ".png"
     imageRelativePath = os.path.join("images", imageName)
     im.save(imageRelativePath, "PNG")
 
@@ -145,7 +145,7 @@ def subscribeToLandmarks():
     # the precision of 1 is maximim, and 0 is minimum.
     # The period of 30 is default (but we select 200, which is more than enough)
     ###
-    landmarkProxy.subscribe("Wall_Mark", 200, 0.0)
+    landmarkProxy.subscribe("Wall_Mark", 100, 0.0)
 
 ip = "192.168.1.2"
 port = 9559
@@ -171,7 +171,7 @@ resolution = 2    # VGA
 colorSpace = 11   # RGB
 
 with open('data.csv', 'a') as csvfile:
-    fieldnames = ['row','column', 'orientation','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
+    fieldnames = ['column','row', 'orientation','headOrientationYaw', 'actualYawU', 'actualPitchU', 'actualYawL', 'actualPitchL', 'leftSonar', 'rightSonar', 'alpha1U', 'beta1U', 'dalU', 'db1U', 'nb1U', 'alpha2U', 'beta2U', 'da2U', 'db2U', 'nb2U', 'tU', 'NU', 'alpha1L', 'beta1L', 'dalL', 'db1L', 'nb1L', 'alpha2L', 'beta2L', 'da2L', 'db2L', 'nb2L', 'tL', 'NL']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
     orientation = raw_input('what is the orientation of the body? (L, S, R): ')
@@ -267,4 +267,4 @@ with open('data.csv', 'a') as csvfile:
             rightSonar = memoryProxy.getData("Device/SubDeviceList/US/Right/Sensor/Value")
             print("right sonar: " + str(rightSonar))
 
-        writer.writerow({'column': column, 'row': row, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})
+            writer.writerow({'column': column, 'row': row, 'orientation':orientation, 'headOrientationYaw':headOrientationYaw, 'actualYawU':actualYawU, 'actualPitchU':actualPitchU,'actualYawL':actualYawL, 'actualPitchL':actualPitchL, 'leftSonar':leftSonar, 'rightSonar':rightSonar, 'alpha1U':alpha1U, 'beta1U':beta1U, 'dalU':da1U, 'db1U':db1U, 'nb1U':nb1U, 'alpha2U':alpha2U, 'beta2U':beta2U, 'da2U':da2U, 'db2U':db2U, 'nb2U':nb2U, 'tU':tU, 'NU':NU, 'alpha1L':alpha1L, 'beta1L':beta1L, 'dalL':da1L, 'db1L':db1L, 'nb1L':nb1L, 'alpha2L':alpha2L, 'beta2L':beta2L, 'da2L':da2L, 'db2L':db2L, 'nb2L':nb2L, 'tL':tL, 'NL':NL})

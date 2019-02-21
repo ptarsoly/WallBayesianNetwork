@@ -14,7 +14,7 @@ def captureLandmarkData(yaw):
     # Captures data from the landmark/vision sensor and returns the data in a tuple
     motionid = motionProxy.post.angleInterpolation(
         ["HeadYaw", "HeadPitch"],
-        [[0.00001+yaw, 0.0+yaw, 0.000001+yaw],[0.0, 0.000001]], [[1.0, 1.5, 2.0],[1.0, 3.0]],
+        [[0.00001+yaw, 0.0+yaw, 0.000001+yaw],[0.0, 0.000001]], [[0.5, 0.75, 1.0],[0.5, 1.0]],
         True  # angle, time, absolute (vs relative to current)
         )
     time.sleep(0.5)
@@ -147,7 +147,7 @@ def subscribeToLandmarks():
     ###
     landmarkProxy.subscribe("Wall_Mark", 100, 0.0)
 
-ip = "192.168.1.2"
+ip = "192.168.1.3"
 port = 9559
 # Connect to ALSonar module.
 sonarProxy = ALProxy("ALSonar", ip, port)

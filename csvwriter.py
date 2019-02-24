@@ -147,7 +147,7 @@ def subscribeToLandmarks():
     ###
     landmarkProxy.subscribe("Wall_Mark", 100, 0.0)
 
-ip = "192.168.1.3"
+ip = "192.168.1.2"
 port = 9559
 # Connect to ALSonar module.
 sonarProxy = ALProxy("ALSonar", ip, port)

@@ -1,7 +1,7 @@
 import os
 import csv
 
-inchSizeMeters = 0.0254
+meter_to_inch_conversion = 39.37
 
 sensor_folder = 'sensor_data'
 

@@ -2,17 +2,31 @@ import os
 import csv
 
 
-def runLandmarkCptGeneration(currentOrientation):
+def getTotalLandmarksSeen(sensor_folder):
+
+    totalLandmarkCount = 0
+    
+    for dataFile in os.listdir(sensor_folder):
+        #if dataFile == 'round 3.csv':
+            with open(os.path.join(sensor_folder, dataFile)) as csvfile:
+                dataReader = csv.reader(csvfile)
+                sensorDataList = map(tuple, dataReader)
+                for row in sensorDataList:
+                    # ignore every other row which is all commas, and column 11 in a row is landmark data
+                    if row[1] and float(row[22]) != 0.0:
+                        totalLandmarkCount = totalLandmarkCount + 1
+                            
+    return totalLandmarkCount
+    
+def runLandmarkCptGeneration(sensor_folder, currentOrientation, totalLandmarkCountAllOrientations):
     ## This method does the full CPT calculation and output for a single orientation. 
     ## Call this multiple times, one for each orientation
     
     meter_to_inch_conversion = 39.37
 
-    sensor_folder = 'sensor_data'
-
     numRows, numCols = 8, 4;
     sensorLandmarkCounts = [[0 for x in range(numRows)] for y in range(numCols)]
-    totalLandmarkCount = 0
+    orientationLandmarkCount = 0
     sensorLandmarkCptTable = [[0.0 for x in range(numRows)] for y in range(numCols)]
     sensorTotalCounts = [[0 for x in range(numRows)] for y in range(numCols)] 
 
@@ -44,13 +58,13 @@ def runLandmarkCptGeneration(currentOrientation):
     #leftSquareMapping[2][2] = (1,2)
     #leftSquareMapping[2][3] = (0,2)
 
-    for dataFile in os.listdir('sensor_data'):
+    for dataFile in os.listdir(sensor_folder):
         #if dataFile == 'round 3.csv':
             with open(os.path.join(sensor_folder, dataFile)) as csvfile:
                 dataReader = csv.reader(csvfile)
                 sensorDataList = map(tuple, dataReader)
                 for row in sensorDataList:
-                    # Every other row is all columns so ignore those
+                    # Every other row is all commas so ignore those
                     if row[1] and row[3].strip() == currentOrientation:
                         colNum = int(row[1])
                         rowNum = int(row[2])
@@ -75,12 +89,13 @@ def runLandmarkCptGeneration(currentOrientation):
                         # column 11 in a row is landmark data
                         if float(row[22]) != 0.0:
                             sensorLandmarkCounts[mappedColNum][mappedRowNum] = sensorLandmarkCounts[mappedColNum][mappedRowNum] + 1
-                            totalLandmarkCount = totalLandmarkCount + 1
+                            orientationLandmarkCount = orientationLandmarkCount + 1
                         
                         sensorTotalCounts[mappedColNum][mappedRowNum] = sensorTotalCounts[mappedColNum][mappedRowNum] + 1 
 
     print(sensorLandmarkCounts)
-    print(totalLandmarkCount)
+    print(orientationLandmarkCount)
+    print(totalLandmarkCountAllOrientations)
     print(sensorTotalCounts[0])
     print(sensorTotalCounts)
     print(sensorTotalCounts)
@@ -89,7 +104,7 @@ def runLandmarkCptGeneration(currentOrientation):
     # Compute the probabilities for a given square given a landmark
     for x in range(numCols):
         for y in range(numRows):
-            sensorLandmarkCptTable[x][y] = float(sensorLandmarkCounts[x][y]) / float(totalLandmarkCount)
+            sensorLandmarkCptTable[x][y] = float(sensorLandmarkCounts[x][y]) / float(totalLandmarkCountAllOrientations)
 
     print(sensorLandmarkCptTable)
 
@@ -111,6 +126,10 @@ def runLandmarkCptGeneration(currentOrientation):
 #### MAIN ####
 ##############
 
-runLandmarkCptGeneration('S')
-runLandmarkCptGeneration('L')
-runLandmarkCptGeneration('R')
+sensor_folder = 'sensor_data'
+
+totalLandmarkCountAllOrientations = getTotalLandmarksSeen(sensor_folder)
+
+runLandmarkCptGeneration(sensor_folder, 'S', totalLandmarkCountAllOrientations)
+runLandmarkCptGeneration(sensor_folder, 'L', totalLandmarkCountAllOrientations)
+runLandmarkCptGeneration(sensor_folder, 'R', totalLandmarkCountAllOrientations)

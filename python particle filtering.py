@@ -28,7 +28,7 @@ class RobotClass:
         
         #Robot’s initial position in the world can be set by:
 def set(self, new_x, new_y, new_orientation):
-    Set robot's initial position and orientation
+    Set robot initial position and orientation
     :param new_x: new x coordinate
     :param new_y: new y coordinate
     :param new_orientation: new orientation

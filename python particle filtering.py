@@ -5,9 +5,8 @@ Created on Wed Apr 17 15:02:49 2019
 @author: kholud
 """
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Setup and initialization %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Setup and initialization 
+
 
 from math import *
 import random
